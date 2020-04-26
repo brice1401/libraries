@@ -170,6 +170,7 @@ void displayDataSerial(WeatherStation maStationMeteo, DateTime instant){
   for(int j=0; j < 62; j++){
     Serial.print(maStationMeteo._radioBuffer[j], HEX);
   }
+  Serial.println("");
   Serial.println("*************************************************");
 }
 
