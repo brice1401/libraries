@@ -229,47 +229,33 @@ addRain7d(_rain, day);
 /* Function for radio message */
 /*******************************************************************************************************/
 
-void WeatherStation::value2Buff(float value, int start, bool tempTest)
-{
-  // this fonction transforme the value in int
-  // then write the value in the 4 byte starting at start
+void WeatherStation::value2Buff(float value, int start){
+    // this fonction add the float to the radio buffer using an union
+    union transfert {
+      float floatValue;
+      byte buffer[4];
+    } conversion;
 
-  int valueInt;
-  if (tempTest) {
-    // if it's a temp value, add an offset of +40°C to avoid negative number then multiply by 10
-    valueInt = int(roundf(((value + 40) * 10)));
-  }
-  else
-  { // else only multiply by 10 to keep one digit
-    valueInt = int(roundf(value * 10));
-  }
+    conversion.floatValue = value;
 
-  _radioBuffer[start + 3] = valueInt & 0xff;
-  _radioBuffer[start + 2] = (valueInt >> 8) & 0xff;
-  _radioBuffer[start + 1] = (valueInt >> 16) & 0xff;
-  _radioBuffer[start] = (valueInt >> 24) & 0xff;
+    for(uint8_t i=0; i<4; i++){
+      _radioBuffer[start + i] = conversion.buffer[i];
+    }
 }
 
-float WeatherStation::buff2Value(int start, bool tempTest)
-{
-  int valueInt;
-  byte byte1 = _radioBuffer[start]; // compter de gauche à droite
-  byte byte2 = _radioBuffer[start + 1];
-  byte byte3 = _radioBuffer[start + 2];
-  byte byte4 = _radioBuffer[start] + 3;
-  valueInt = (int)(byte1 << 24 | byte2 << 16 | byte3 << 8 | byte4);
+float WeatherStation::buff2Value(int start){
+  // this fonction convert the float from the radio buffer to a float
 
-  float value;
-  if (tempTest) {
-    // if it's a temp value, divise by 10 then remove the +40°C offset
-    value = (float(valueInt) / 10) - 40;
-  }
-  else
-  { // else only divise by 10
-    value = float(valueInt) / 10;
+  union transfert {
+    float floatValue;
+    byte buffer[4];
+  } conversion;
+
+  for(uint8_t i=0; i<4; i++){
+    conversion.buffer[i] = _radioBuffer[start+i];
   }
 
-  return (value);
+  return(conversion.floatValue);
 }
 
 void WeatherStation::codingMessage()
@@ -278,17 +264,17 @@ void WeatherStation::codingMessage()
   value2Buff(_rain, 0);
   value2Buff(_windDir, 4);
   value2Buff(_windSpeed, 8);
-  value2Buff(_tempDHT, 12, true);
+  value2Buff(_tempDHT, 12);
   value2Buff(_humidity, 16);
-  value2Buff(_tempBMP, 20, true);
+  value2Buff(_tempBMP, 20);
   value2Buff(_pressure, 24);
-  value2Buff(_tempRTC, 28, true);
+  value2Buff(_tempRTC, 28);
   value2Buff(_light, 32);
   value2Buff(_lightRed, 36);
   value2Buff(_lightGreen, 40);
   value2Buff(_lightBlue, 44);
   value2Buff(_batteryVoltage, 48);
-  value2Buff(_batteryTemp, 52, true);
+  value2Buff(_batteryTemp, 52);
 }
 
 void WeatherStation::decodingMessage()
@@ -296,17 +282,17 @@ void WeatherStation::decodingMessage()
   _rain = buff2Value(0);
   _windDir = buff2Value(4);
   _windSpeed = buff2Value(8);
-  _tempDHT = buff2Value(12, true);
+  _tempDHT = buff2Value(12);
   _humidity = buff2Value(16);
-  _tempBMP = buff2Value(20, true);
+  _tempBMP = buff2Value(20);
   _pressure = buff2Value(24);
-  _tempRTC = buff2Value(28, true);
+  _tempRTC = buff2Value(28);
   _light = buff2Value(32);
   _lightRed = buff2Value(36);
   _lightGreen = buff2Value(40);
   _lightBlue = buff2Value(44);
   _batteryVoltage = buff2Value(48);
-  _batteryTemp = buff2Value(52, true);
+  _batteryTemp = buff2Value(52);
 }
 
 void WeatherStation::setRadioBufferReceive(uint8_t* message)

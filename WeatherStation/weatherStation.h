@@ -42,8 +42,6 @@ class WeatherStation
     float _lightBlue;
 
 
-
-
   public :
     uint8_t _radioBuffer[62];
     String _iconNameWindDir;
@@ -113,8 +111,8 @@ class WeatherStation
     /*
      * function to create the message for the radio
      */
-    void value2Buff(float value, int start, bool tempTest = false);
-    float buff2Value(int start, bool tempTest = false);
+    void value2Buff(float value, int start);
+    float buff2Value(int start);
 
 
     /* for coding, all the data are already inside the object, so it's only necessary to
