@@ -312,13 +312,25 @@ uint8_t* WeatherStation::getRadioBuffer(){
 
 void WeatherStation::calculateIndex(){
   // calculate all the four index of temperature
-
-  _avgTemp = (_tempBMP + _tempDHT) / 2;
   _dewPoint = dewPoint(_avgTemp, _humidity);
   _icingPoint = icingPoint(_avgTemp, _dewPoint);
 	_heatIndex = heatIndex(_avgTemp, _humidity);
   _windChill = windChill(_avgTemp, _windSpeed);
- }
+
+  // calculate the average temp between the BMP and the DHT
+  if(!isnan(_tempBMP) && !isnan(_tempDHT)){
+    _avgTemp = (_tempBMP + _tempDHT) / 2;
+  }
+  else if(isnan(_tempDHT)){
+    _avgTemp = _tempBMP;
+  }
+  else if(isnan(_tempBMP)){
+    _avgTemp = _tempDHT;
+  }
+  else{
+    _avgTemp = 0;
+  }
+}
 
 
 
