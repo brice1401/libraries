@@ -49,12 +49,17 @@ extern "C" {
 #include "utility/debug.h"
 }
 
+static uint8_t SLAVESELECT = 10; // ss
+static uint8_t SLAVEREADY  = 7;  // handshake pin
+static uint8_t SLAVERESET  = 5;  // reset pin
+
 static bool inverted_reset = false;
-SPIClass *WIFININA_SPIWIFI=&SPI;
-int8_t WIFININA_SLAVESELECT = 10, WIFININA_SLAVEREADY = 7, 
-  WIFININA_SLAVERESET = 5, WIFININA_SLAVEGPIO0 = 6;
 
 #define DELAY_TRANSFER()
+
+#ifndef SPIWIFI
+#define SPIWIFI SPI
+#endif
 
 bool SpiDrv::initialized = false;
 
@@ -65,56 +70,41 @@ void SpiDrv::begin()
 #endif
 
 #ifdef SPIWIFI_SS
-      WIFININA_SLAVESELECT = SPIWIFI_SS;
-#endif
-      
-#ifdef SPIWIFI_ACK
-      WIFININA_SLAVEREADY = SPIWIFI_ACK;
-#endif
-      
-#ifdef SPIWIFI_RESET
-      WIFININA_SLAVERESET = (uint8_t)SPIWIFI_RESET;
-#endif
-      
-#ifdef NINA_GPIO0
-      WIFININA_SLAVEGPIO0 = NINA_GPIO0;
+      SLAVESELECT = SPIWIFI_SS;
 #endif
 
-#ifdef SPIWIFI
-      WIFININA_SPIWIFI = &SPIWIFI;
+#ifdef SPIWIFI_ACK
+      SLAVEREADY = SPIWIFI_ACK;
+#endif
+
+#ifdef SPIWIFI_RESET
+      SLAVERESET = (uint8_t)SPIWIFI_RESET;
 #endif
 
 #ifdef ARDUINO_SAMD_MKRVIDOR4000
       inverted_reset = false;
 #else
-#ifdef PINS_COUNT
-      if (WIFININA_SLAVERESET > PINS_COUNT) {
+      if (SLAVERESET > PINS_COUNT) {
         inverted_reset = true;
-        WIFININA_SLAVERESET = ~WIFININA_SLAVERESET;
+        SLAVERESET = ~SLAVERESET;
       }      
 #endif
-#endif
 
-      WIFININA_SPIWIFI->begin();
-      pinMode(WIFININA_SLAVESELECT, OUTPUT);
-      pinMode(WIFININA_SLAVEREADY, INPUT);
-      pinMode(WIFININA_SLAVERESET, OUTPUT);
+      SPIWIFI.begin();
+      pinMode(SLAVESELECT, OUTPUT);
+      pinMode(SLAVEREADY, INPUT);
+      pinMode(SLAVERESET, OUTPUT);
+      pinMode(NINA_GPIO0, OUTPUT);
 
-      if (WIFININA_SLAVEGPIO0 >= 0) {
-	pinMode(WIFININA_SLAVEGPIO0, OUTPUT);
-	digitalWrite(WIFININA_SLAVEGPIO0, HIGH);
-      }
-
-      digitalWrite(WIFININA_SLAVESELECT, HIGH);
-      digitalWrite(WIFININA_SLAVERESET, inverted_reset ? HIGH : LOW);
+      digitalWrite(NINA_GPIO0, HIGH);
+      digitalWrite(SLAVESELECT, HIGH);
+      digitalWrite(SLAVERESET, inverted_reset ? HIGH : LOW);
       delay(10);
-      digitalWrite(WIFININA_SLAVERESET, inverted_reset ? LOW : HIGH);
+      digitalWrite(SLAVERESET, inverted_reset ? LOW : HIGH);
       delay(750);
 
-      if (WIFININA_SLAVEGPIO0 >= 0) {
-	//digitalWrite(WIFININA_SLAVEGPIO0, LOW);
-	pinMode(WIFININA_SLAVEGPIO0, INPUT_PULLUP);
-      }
+      digitalWrite(NINA_GPIO0, LOW);
+      pinMode(NINA_GPIO0, INPUT);
 
 #ifdef _DEBUG_
 	  INIT_TRIGGER()
@@ -124,36 +114,36 @@ void SpiDrv::begin()
 }
 
 void SpiDrv::end() {
-    digitalWrite(WIFININA_SLAVERESET, inverted_reset ? HIGH : LOW);
+    digitalWrite(SLAVERESET, inverted_reset ? HIGH : LOW);
 
-    pinMode(WIFININA_SLAVESELECT, INPUT);
+    pinMode(SLAVESELECT, INPUT);
 
-    WIFININA_SPIWIFI->end();
+    SPIWIFI.end();
 
     initialized = false;
 }
 
 void SpiDrv::spiSlaveSelect()
 {
-    WIFININA_SPIWIFI->beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-    digitalWrite(WIFININA_SLAVESELECT, LOW);
+    SPIWIFI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
+    digitalWrite(SLAVESELECT,LOW);
 
     // wait for up to 5 ms for the NINA to indicate it is not ready for transfer
     // the timeout is only needed for the case when the shield or module is not present
-    for (unsigned long start = millis(); (digitalRead(WIFININA_SLAVEREADY) != HIGH) && (millis() - start) < 5;);
+    for (unsigned long start = millis(); (digitalRead(SLAVEREADY) != HIGH) && (millis() - start) < 5;);
 }
 
 
 void SpiDrv::spiSlaveDeselect()
 {
-    digitalWrite(WIFININA_SLAVESELECT,HIGH);
-    WIFININA_SPIWIFI->endTransaction();
+    digitalWrite(SLAVESELECT,HIGH);
+    SPIWIFI.endTransaction();
 }
 
 
 char SpiDrv::spiTransfer(volatile char data)
 {
-    char result = WIFININA_SPIWIFI->transfer(data);
+    char result = SPIWIFI.transfer(data);
     DELAY_TRANSFER();
 
     return result;                    // return the received byte
@@ -207,10 +197,10 @@ char SpiDrv::readChar()
             return 0;                                   \
         }else                                           \
 
-#define waitSlaveReady() (digitalRead(WIFININA_SLAVEREADY) == LOW)
-#define waitSlaveSign() (digitalRead(WIFININA_SLAVEREADY) == HIGH)
-#define waitSlaveSignalH() while(digitalRead(WIFININA_SLAVEREADY) != HIGH){}
-#define waitSlaveSignalL() while(digitalRead(WIFININA_SLAVEREADY) != LOW){}
+#define waitSlaveReady() (digitalRead(SLAVEREADY) == LOW)
+#define waitSlaveSign() (digitalRead(SLAVEREADY) == HIGH)
+#define waitSlaveSignalH() while(digitalRead(SLAVEREADY) != HIGH){}
+#define waitSlaveSignalL() while(digitalRead(SLAVEREADY) != LOW){}
 
 void SpiDrv::waitForSlaveSign()
 {
@@ -572,10 +562,7 @@ void SpiDrv::sendCmd(uint8_t cmd, uint8_t numParam)
 
 int SpiDrv::available()
 {
-  if (WIFININA_SLAVEGPIO0 >= 0) {
-    return (digitalRead(WIFININA_SLAVEGPIO0) == HIGH);
-  }
-  return true;
+    return (digitalRead(NINA_GPIO0) != LOW);
 }
 
 SpiDrv spiDrv;

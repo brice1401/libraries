@@ -24,9 +24,10 @@
 
 #include "Arduino.h"
 #include "utility/spi_drv.h"
+
 extern "C" {
 #include "utility/wl_types.h"
-#include "debug.h"
+#include "utility/debug.h"
 }
 
 
@@ -53,7 +54,7 @@ void ServerDrv::startServer(uint16_t port, uint8_t sock, uint8_t protMode)
     uint8_t _dataLen = 0;
     if (!SpiDrv::waitResponseCmd(START_SERVER_TCP_CMD, PARAM_NUMS_1, &_data, &_dataLen))
     {
-      WARN("No response to server start");
+        WARN("error waitResponse");
     }
     SpiDrv::spiSlaveDeselect();
 }

@@ -24,8 +24,6 @@
 #define WIFI_FIRMWARE_LATEST_VERSION "1.2.1"
 
 #include <inttypes.h>
-#include <Arduino.h>
-#include <SPI.h>
 
 extern "C" {
 	#include "utility/wl_definitions.h"
@@ -42,6 +40,7 @@ class WiFiClass
 private:
 
     static void init();
+    unsigned long _timeout;
 public:
     WiFiClass();
 
@@ -80,6 +79,10 @@ public:
     uint8_t beginAP(const char *ssid, uint8_t channel);
     uint8_t beginAP(const char *ssid, const char* passphrase);
     uint8_t beginAP(const char *ssid, const char* passphrase, uint8_t channel);
+
+    uint8_t beginEnterprise(const char* ssid, const char* username, const char* password);
+    uint8_t beginEnterprise(const char* ssid, const char* username, const char* password, const char* identity);
+    uint8_t beginEnterprise(const char* ssid, const char* username, const char* password, const char* identity, const char* ca);
 
     /* Change Ip configuration settings disabling the dhcp client
         *
@@ -245,6 +248,13 @@ public:
     uint8_t status();
 
     /*
+     * Return The deauthentication reason code.
+     *
+     * return: the deauthentication reason code
+     */
+    uint8_t reasonCode();
+
+    /*
      * Resolve the given hostname to an IP address.
      * param aHostname: Name to be resolved
      * param aResult: IPAddress structure to store the returned IP address
@@ -262,8 +272,7 @@ public:
     int ping(const String &hostname, uint8_t ttl = 128);
     int ping(IPAddress host, uint8_t ttl = 128);
 
-    void setPins(int8_t cs=10, int8_t ready=7, int8_t reset=5, int8_t gpio0=6, SPIClass *spi = &SPI);
-    void setLEDs(uint8_t red, uint8_t green, uint8_t blue);
+    void setTimeout(unsigned long timeout);
 };
 
 extern WiFiClass WiFi;

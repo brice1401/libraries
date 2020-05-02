@@ -22,10 +22,7 @@
 #define SPI_Drv_h
 
 #include <inttypes.h>
-#include <Arduino.h>
-#include <SPI.h>
 #include "utility/wifi_spi.h"
-#include "debug.h"
 
 #define SPI_START_CMD_DELAY 	10
 
