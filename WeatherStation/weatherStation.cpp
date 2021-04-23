@@ -17,7 +17,9 @@ WeatherStation::WeatherStation()
 {
 
   /*
-   * Init all the pin of I/O
+   * Constructor
+   *
+   * Init all the attribut to 0
    * and activate the library of all the sensor
    */
 
@@ -210,9 +212,11 @@ void WeatherStation::pressure2Forecast(){
 
 
 void WeatherStation::addRain24h(float value, int indice) {
+  //  faire le changement de jour
   _rain24h[indice] += value;
 }
 void WeatherStation::addRain7d(float value, int indice) {
+  // faire le changement d'heure
   _rain7d[indice] += value;
 }
 void WeatherStation::addRainGroup(DateTime instant){

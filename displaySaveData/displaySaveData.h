@@ -30,3 +30,4 @@ String getMomentDatalog(DateTime instant);
 
 // function for datalogging
 void writeDataSD(String Filename, WeatherStation maStationMeteo, DateTime instant);
+void readDataSD2Send(String Filename, WeatherStation maStationMeteo);

@@ -187,89 +187,55 @@ void writeDataSD(String Filename, WeatherStation maStationMeteo, DateTime instan
 
   if(dataFile){
     // the file is available, we can write on it
-    String instantDataLog = getMomentDatalog(instant);
+    String jourDataLog = getDate(instant);
+    String heureDataLog = getHoraireHM(instant)
 
 
-    dataFile.print(F("Rain; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getRain());
-
-    dataFile.print(F("Wind Speed; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getWindSpeed());
-
-    dataFile.print(F("Wind Direction; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getWindDir());
-
-    dataFile.print(F("Temp DHT22; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getTempDHT());
-
-    dataFile.print(F("Humidity; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getHumidity());
-
-    dataFile.print(F("Pressure; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getPressure());
-
-    dataFile.print(F("Temperature BMP; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getTempBMP());
-
-    dataFile.print(F("Temperature RTC; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getTempRTC());
-
-    dataFile.print(F("Light; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getLight());
-
-    dataFile.print(F("Light Red; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getLightRed());
-
-    dataFile.print(F("Light Green; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getLightGreen());
-
-    dataFile.print(F("Light Blue; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getLightBlue());
-
-    dataFile.print(F("Dew Point; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo._dewPoint);
-
-    dataFile.print(F("Heat Index; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo._heatIndex);
-
-
-    dataFile.print(F("Icing Point; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo._icingPoint);
-
-    dataFile.print(F("Wind Chill; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo._windChill);
-
-    dataFile.print(F("RSSI; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo._RSSI);
-
-		dataFile.print(F("Battery Station voltage; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo.getBatteryVoltage());
-
-		dataFile.print(F("Battery Receiver voltage; "));
-    dataFile.print(instantDataLog);
-    dataFile.println(maStationMeteo._batteryReceiverVoltage);
-
-
-
-
+    dataFile.(print(jourDataLog, HEX);
+    dataFile.print(F(";"));
+    dataFile.(print(heureDataLog, HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getRain(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getRain24h(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getRain7d(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getWindSpeed(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getWindDir(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getTempDHT(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getHumidity(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getPressure(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getTempBMP(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getTempRTC(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getLight(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getLightRed(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getLightGreen(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getLightBlue(), HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo._dewPoint, HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo._heatIndex, HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo._icingPoint, HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo._windChill, HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo._RSSI, HEX);
+    dataFile.print(F(";"));
+    dataFile.print(maStationMeteo.getBatteryVoltage(), HEX);
+    dataFile.print(F(";"));
+    dataFile.println(maStationMeteo._batteryReceiverVoltage, HEX);
 
     dataFile.close();
   }
@@ -277,4 +243,12 @@ void writeDataSD(String Filename, WeatherStation maStationMeteo, DateTime instan
   else {
     Serial.println(F("error opening datalog.txt"));
   }
+}
+
+void readDataSD2Send(String Filename, WeatherStation maStationMeteo ){
+
+  File dataFile = SD.open(Filename, FILE_READ);
+
+
+
 }
