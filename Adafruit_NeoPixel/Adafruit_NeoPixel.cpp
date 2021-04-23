@@ -172,6 +172,11 @@ void Adafruit_NeoPixel::updateType(neoPixelType t) {
   }
 }
 
+#if defined(ARDUINO_ARCH_RP2040)
+extern "C" void rp2040Show(
+  uint16_t pin, uint8_t *pixels, uint32_t numBytes, uint8_t type);
+#endif
+
 #if defined(ESP8266)
 // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
 extern "C" void ICACHE_RAM_ATTR espShow(
@@ -181,6 +186,14 @@ extern "C" void espShow(
   uint16_t pin, uint8_t *pixels, uint32_t numBytes, uint8_t type);
 #endif // ESP8266
 
+#if defined(K210) 
+#define KENDRYTE_K210 1
+#endif
+
+#if defined(KENDRYTE_K210)
+extern "C" void  k210Show(
+    uint8_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz);
+#endif //KENDRYTE_K210
 /*!
   @brief   Transmit pixel data in RAM to NeoPixels.
   @note    On most architectures, interrupts are temporarily disabled in
@@ -1129,9 +1142,13 @@ void Adafruit_NeoPixel::show(void) {
 
 #elif defined(__arm__)
 
-// ARM MCUs -- Teensy 3.0, 3.1, LC, Arduino Due ---------------------------
+// ARM MCUs -- Teensy 3.0, 3.1, LC, Arduino Due, RP2040 -------------------
 
-#if defined(TEENSYDUINO) && defined(KINETISK) // Teensy 3.0, 3.1, 3.2, 3.5, 3.6
+#if defined(ARDUINO_ARCH_RP2040)
+  // Use PIO
+  rp2040Show(pin, pixels, numBytes, is800KHz);
+
+#elif defined(TEENSYDUINO) && defined(KINETISK) // Teensy 3.0, 3.1, 3.2, 3.5, 3.6
 #define CYCLES_800_T0H  (F_CPU / 4000000)
 #define CYCLES_800_T1H  (F_CPU / 1250000)
 #define CYCLES_800      (F_CPU /  800000)
@@ -2102,6 +2119,10 @@ void Adafruit_NeoPixel::show(void) {
   // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
   espShow(pin, pixels, numBytes, is800KHz);
 
+#elif defined(KENDRYTE_K210)
+
+  k210Show(pin, pixels, numBytes, is800KHz);
+  
 #elif defined(__ARDUINO_ARC__)
 
 // Arduino 101  -----------------------------------------------------------

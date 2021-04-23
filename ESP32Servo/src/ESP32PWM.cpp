@@ -10,11 +10,28 @@
 
 // initialize the class variable ServoCount
 int ESP32PWM::PWMCount = -1;              // the total number of attached servos
+bool  ESP32PWM::explicateAllocationMode=false;
 ESP32PWM * ESP32PWM::ChannelUsed[NUM_PWM]; // used to track whether a channel is in service
 long ESP32PWM::timerFreqSet[4] = { -1, -1, -1, -1 };
 int ESP32PWM::timerCount[4] = { 0, 0, 0, 0 };
 // The ChannelUsed array elements are 0 if never used, 1 if in use, and -1 if used and disposed
 // (i.e., available for reuse)
+/**
+ * allocateTimer
+ * @param a timer number 0-3 indicating which timer to allocate in this library
+ * Switch to explicate allocation mode
+ *
+ */
+void ESP32PWM::allocateTimer(int timerNumber){
+	if(timerNumber<0 || timerNumber>3)
+		return;
+	if(ESP32PWM::explicateAllocationMode==false){
+		ESP32PWM::explicateAllocationMode=true;
+		for(int i=0;i<4;i++)
+			ESP32PWM::timerCount[i]=4;// deallocate all timers to start mode
+	}
+	ESP32PWM::timerCount[timerNumber]=0;
+}
 
 ESP32PWM::ESP32PWM() {
 	resolutionBits = 8;
@@ -67,19 +84,22 @@ int ESP32PWM::allocatenext(double freq) {
 				//Serial.println("Free channel timer "+String(i)+" at freq "+String(freq)+" remaining "+String(4-timerCount[i]));
 
 				timerNum = i;
-				int myTimerNumber = timerAndIndexToChannel(timerNum,
-						timerCount[timerNum]);
-				if (myTimerNumber >= 0) {
-					pwmChannel = myTimerNumber;
-// 					Serial.println(
+				for (int index=0; index<4; ++index)
+				{
+					int myTimerNumber = timerAndIndexToChannel(timerNum,index);
+					if ((myTimerNumber >= 0)  && (!ChannelUsed[myTimerNumber]))
+					{
+						pwmChannel = myTimerNumber;
+// 						Serial.println(
 // 							"PWM on ledc channel #" + String(pwmChannel)
 // 									+ " using 'timer " + String(timerNum)
 // 									+ "' to freq " + String(freq) + "Hz");
-					ChannelUsed[pwmChannel] = this;
-					timerCount[timerNum]++;
-					PWMCount++;
-					myFreq = freq;
-					return pwmChannel;
+						ChannelUsed[pwmChannel] = this;
+						timerCount[timerNum]++;
+						PWMCount++;
+						myFreq = freq;
+						return pwmChannel;
+					}
 				}
 			} else {
 //				if(timerFreqSet[i]>0)
