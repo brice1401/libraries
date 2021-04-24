@@ -26,6 +26,8 @@ WeatherStation::WeatherStation()
   // init the attribute
 
   _rain = 0;
+  _rain24hSum = 0;
+  _rain7dSum = 0;
   _windDir = 0;
   _windSpeed = 0;
   _tempDHT = 0;
@@ -51,6 +53,8 @@ WeatherStation::WeatherStation()
 
 	_batteryReceiverVoltage = 0;
 	_RSSI = 0;
+  _lastHourSave = 0;
+  _lastDaySave = 0;
 
   for(int i=0; i<7; i++){
     _rain7d[i] = 0;
@@ -211,6 +215,10 @@ void WeatherStation::pressure2Forecast(){
 }
 
 
+/*******************************************************************************************************/
+/* Function for rain data */
+/*******************************************************************************************************/
+
 void WeatherStation::addRain24h(float value, int indice) {
   //  faire le changement de jour
   _rain24h[indice] += value;
@@ -221,12 +229,25 @@ void WeatherStation::addRain7d(float value, int indice) {
 }
 void WeatherStation::addRainGroup(DateTime instant){
 
-uint8_t  hour = instant.hour();
-uint8_t day = instant.dayOfTheWeek();
+  uint8_t  hour = instant.hour();
+  uint8_t day = instant.dayOfTheWeek();
 
-addRain24h(_rain, hour);
-addRain7d(_rain, day);
+  // check if the hour or day change
+  // if so; reset the cell
 
+  if hour <> _lastHourSave{
+    _rain24h[hour] = 0;
+  }
+
+  if day <> _lastDaySave{
+    _rain7d[day] = 0;
+  }
+
+  addRain24h(_rain, hour);
+  addRain7d(_rain, day);
+
+  _lastHourSave = hour;
+  _lastDaySave = day;
 }
 
 /*******************************************************************************************************/
@@ -315,13 +336,17 @@ uint8_t* WeatherStation::getRadioBuffer(){
 }
 
 void WeatherStation::calculateIndex(){
+
+  averageTemp();
   // calculate all the four index of temperature
   _dewPoint = dewPoint(_avgTemp, _humidity);
   _icingPoint = icingPoint(_avgTemp, _dewPoint);
 	_heatIndex = heatIndex(_avgTemp, _humidity);
   _windChill = windChill(_avgTemp, _windSpeed);
+}
 
-  // calculate the average temp between the BMP and the DHT
+void WeatherStation::averageTemp(){
+  // Calculate the average temperature between DHT and BMP
   if(!isnan(_tempBMP) && !isnan(_tempDHT)){
     _avgTemp = (_tempBMP + _tempDHT) / 2;
   }
@@ -334,6 +359,7 @@ void WeatherStation::calculateIndex(){
   else{
     _avgTemp = 0;
   }
+
 }
 
 

@@ -182,6 +182,9 @@ void displayDataSerial(WeatherStation maStationMeteo, DateTime instant){
 /*******************************************************************************************************/
 
 void writeDataSD(String Filename, WeatherStation maStationMeteo, DateTime instant){
+  /*
+   * Function to write data in the SD card
+   */
 
   File dataFile = SD.open(Filename, FILE_WRITE);
 
@@ -190,10 +193,10 @@ void writeDataSD(String Filename, WeatherStation maStationMeteo, DateTime instan
     String jourDataLog = getDate(instant);
     String heureDataLog = getHoraireHM(instant)
 
-
-    dataFile.(print(jourDataLog, HEX);
+    // Ecriture en Hexa pour que chaque donnée soit sur 4 caractères
+    dataFile.(print(jourDataLog);
     dataFile.print(F(";"));
-    dataFile.(print(heureDataLog, HEX);
+    dataFile.(print(heureDataLog);
     dataFile.print(F(";"));
     dataFile.print(maStationMeteo.getRain(), HEX);
     dataFile.print(F(";"));
@@ -245,10 +248,75 @@ void writeDataSD(String Filename, WeatherStation maStationMeteo, DateTime instan
   }
 }
 
-void readDataSD2Send(String Filename, WeatherStation maStationMeteo ){
+void readDataSD2Send(String Filename, WeatherStation maStationMeteo){
+
+  int nbreCarLine = 123;
+
 
   File dataFile = SD.open(Filename, FILE_READ);
+  unsigned long lengthFile = dataFile.size();
+  unsigned long numberLine = lengthFile/nbreCarLine;
+  unsigned long indiceLastLine = lengthFile*(numberLine-1);
 
 
+  // Read data in the last numberLine
+  // set the cursor to the correc position
+
+  //date et heure
+  String jourDataLog;
+  String heureDataLog;
+  dataFile.seek(indiceLastLine);
+  dataFile.read(jourDataLog, 10);
+  dataFile.seek(indiceLastLine + 11);
+  dataFile.read(heureDataLog, 10);
+
+  // data
+  float rain24h;
+  float rain7d;
+  float windSpeed;
+  float windDir;
+  float tempDHT;
+  float humidity;
+  float pressure;
+  float tempBMP;
+  float batterySender;
+
+  dataFile.seek(indiceLastLine + 22);
+  dataFile.read(rain24h, 4);
+  dataFile.seek(indiceLastLine + 27);
+  dataFile.read(rain7d, 4);
+  dataFile.seek(indiceLastLine + 32);
+  dataFile.read(windSpeed, 4);
+  dataFile.seek(indiceLastLine + 37);
+  dataFile.read(windDir, 4);
+  dataFile.seek(indiceLastLine + 42);
+  dataFile.read(tempDHT, 4);
+  dataFile.seek(indiceLastLine + 47);
+  dataFile.read(humidity, 4);
+  dataFile.seek(indiceLastLine + 52);
+  dataFile.read(pressure, 4);
+  dataFile.seek(indiceLastLine + 57);
+  dataFile.read(tempBMP, 4);
+  dataFile.seek(indiceLastLine + 117);
+  dataFile.read(batterySender, 4);
+
+
+  // Add this data to the weatherStation object
+
+  maStationMeteo.setRain24h(rain24h);
+  maStationMeteo.setRain7d(rain7d);
+  maStationMeteo.setWindSpeed(windSpeed);
+  maStationMeteo.setWindDir(windDir);
+  maStationMeteo.setTempDHT(tempDHT);
+  maStationMeteo.setHumidity(humidity);
+  maStationMeteo.setPressure(pressure);
+  maStationMeteo.setTempBMP(tempBMP);
+  maStationMeteo.setBatteryVoltage(batterySender);
+
+  //calculate the element to send them to adafruit IO
+
+  maStationMeteo.averageTemp();
+  maStationMeteo.windDirAngle2Direction();
+  maStationMeteo.pressure2Forecast();
 
 }

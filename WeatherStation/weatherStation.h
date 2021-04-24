@@ -25,7 +25,9 @@ class WeatherStation
     /* data on weather */
     float _rain;
   	float _rain24h[24];
+    float _rain24hSum;
     float _rain7d[7];
+    float _rain7dSum;
     float _windDir;
     float _windSpeed;
     float _tempDHT;
@@ -52,6 +54,9 @@ class WeatherStation
 		float _windChill;
 		float _heatIndex;
 
+    int _lastHourSave;
+    int _lastDaySave;
+
 		String _timeLastMessage;
 		float _RSSI;
 		float _batteryReceiverVoltage;
@@ -65,7 +70,9 @@ class WeatherStation
     /* get and set methods */
     float getRain();
   	float getRain24h();
+    float getRain24hSum();
   	float getRain7d();
+  	float getRain7dSum();
     float getWindDir();
     float getWindSpeed();
     float getTempDHT();
@@ -84,7 +91,9 @@ class WeatherStation
 
     void setRain(float value);
     void setRain24h(float value, int indice);
+    void setRain24hSum(float value);
     void setRain7d(float value, int indice);
+    void setRain7dSum(float value);
     void setWindDir(float value);
     void setWindSpeed(float value);
     void setTempDHT(float value);
@@ -126,7 +135,8 @@ class WeatherStation
     void setRadioBufferReceive(uint8_t* message);
     uint8_t* getRadioBuffer();
 
-	void calculateIndex();
+	   void calculateIndex();
+     void averageTemp();
 
 };
 
